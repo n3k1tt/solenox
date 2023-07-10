@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solenox</title>
+ 
+    <style>
+        *{
+            padding:0;
+            margin:0;
+            font-family:  Helvetica, Arial,sans-serif;
+        }
+        body{
+            min-height: 100vh;
+            width:100vw;
+        }
+        main{
+          position: absolute;
+             top:0;
+             bottom: 0;
+             left:0;
+             right:0;
+             z-index: 2;
+             width: 100%;
+             height: 100vh;
+             backdrop-filter: blur(12px);
+        }
+       #particle-canvas{
+              width: 100%;
+             height: 100vh;
+             position: absolute;
+             top:0;
+             bottom: 0;
+             left:0;
+             right:0;
+             z-index: 1;
+            background: linear-gradient(to bottom, rgb(10, 10, 50) 0%,rgb(60, 10, 60) 100%);
+            vertical-align: middle;
+        }
+        .header{
+            color:white;
+            text-align: center;
+          
+          
+        }
+        h1 {
+            font-family: Roboto, Arial, sans-serif;
+  font-size: 3vh;
+  background: rgb(189,84,148);
+background: radial-gradient(circle, rgba(189,84,148,1) 0%, rgba(63,94,251,1) 82%, rgba(252,70,107,1) 100%); 
+background-clip:text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+        }
+        .info{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height:90vh;
+            
+        }
+        .father{
+            background-color: rgba(0, 0, 0, 0.404);
+            width:40%;
+            display: grid;
+            grid-template-columns: 50% 50% ;
+            height:50vh;
+            border-radius: 1.2vh;
+        }
+        .right,.left{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+        }
+        .left{
+            background: rgb(189,84,148);
+background: radial-gradient(circle, rgba(189,84,148,1) 14%, rgba(63,94,251,1) 87%); 
+            border-radius:1.2vh 0 0 1.2vh ;
+            flex-direction: column;
+        }
+        .left > form{
+            display: flex;
+            flex-direction: column;
+            gap:1.2vh;
+        }
+        .right > form{
+            display: flex;
+            flex-direction: column;
+            gap:1.2vh;
+            transition: all 2;
+        }
+        
+        input:focus{
+            outline:0;
+        }
+        #loginormail,#userpass,#login,#email,#pass,#rep{
+            padding: .4vh .4vw .4vh .4vw ;
+            background-color: rgba(255, 255, 255, 0);
+            border:0;
+            border-bottom: .3vh solid white;
+            border-radius: 0vh;
+            color:white;
+        }
+        p{
+            text-align: center;
+            color:white;
+        }
+        #subbutton,button{
+            padding: .7vh .4vw .7vh .4vw ;
+            background-color: rgb(255, 255, 255);
+            color:rgb(235, 235, 235);
+            border:0;
+            border-radius: .5vh;
+            background: rgb(189,84,148);
+            background: radial-gradient(circle, rgba(189,84,148,1) 14%, rgba(63,94,251,1) 87%); 
+        }
+        button{
+            background: rgb(238,174,202);
+background: radial-gradient(circle, rgb(145, 107, 123) 0%, rgb(84, 107, 134) 100%); 
+        }
+        #require > div{
+            color:white;
+            font-size:1.1vh;
+        }
+        h2{
+            color:white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <main>
+        <div class="header" style="display: none;">
+            <h1>Solenox Project</h1>
+        </div>
+        <div class="info">
+            <div class="father">
+                <div class="left">
+                 
+                        <h2>Нет аккаунта? Создайте его</h2>
+                        <button type="button"onclick="change()">Создать Аккаунт</button>
+                </div>
+                <div class="right">
+                    <form action="registerhandler.php">
+                        <p>New Solenox Account</p>
+                        <input  placeholder="email"type="email" id="email">
+                        <input  placeholder="login"type="text" id="login">
+                        <input  placeholder="password"type="password" id="pass" oninput="checkpass()">
+                        <input  placeholder="repeat password"type="password" id="rep" style="display: none;">
+                        <div id="require">
+                            <div id="regist">· Большие и маленькие буквы</div>
+                            <div id="num">· Цифры</div>
+                            <div id="special">· Специальные Символы</div>
+                            <div id="len">· Больше 8 символов</div>
+                        </div>
+                        <pre style="font-size:1.1vh;color:red" id="error"></pre>
+                        <input onclick="reg()" type="button"  id="subbutton" value="Зарегистрироваться">
+                    </form>
+                    <form action="loginhandler.php">
+                        <p>Welcome to Solenox</p>
+                        <input placeholder="login or email" type="text" id="loginormail">
+                        <input placeholder="password" type="password" id="userpass">
+                        <pre style="font-size:1.1vh;color:red" id="loginerror"></pre>
+                        <input type="button" onclick="login()"id="subbutton"value="Войти">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        let a;
+        function login(){
+            if(document.getElementById('loginormail').value.length>0 && document.getElementById('userpass').value.length>0){
+            let form = document.createElement('form');
+                    form.action = 'http://localhost/solenox/lhandler.php';
+                    form.method = 'POST';
+                    form.innerHTML = `
+                    <input name="loginormail" value="${document.getElementById('loginormail').value}">
+                    <input name="password" value="${document.getElementById('userpass').value}">
+                    `;
+
+                    // перед отправкой формы, её нужно вставить в документ
+                    document.body.append(form);
+                    form.submit();
+            }else{
+                document.getElementById('loginerror').textContent='Логин или Пароль пуст';
+            }
+        }
+        function reg(){
+            if (a==4){
+                if(document.getElementById('pass').value==document.getElementById('rep').value){
+                    let form = document.createElement('form');
+                    form.action = 'http://localhost/solenox/rhandler.php';
+                    form.method = 'POST';
+                    form.innerHTML = `<input name="stage" value="${a}">
+                    <input name="login" value="${document.getElementById('login').value}">
+                    <input name="email" value="${document.getElementById('email').value}">
+                    <input name="password" value="${document.getElementById('pass').value}">
+                    `;
+
+                    // перед отправкой формы, её нужно вставить в документ
+                    document.body.append(form);
+                    form.submit();
+                }else{
+                    document.getElementById('error').textContent=' Пароли не совпадают';
+                }
+            }else{
+                document.getElementById('error').textContent='Проверьте параметры';
+            }
+        }
+        function checkForDigits(str) {
+  var regex = /\d/;
+  return regex.test(str);
+}
+       function containsSpecialCharacter(str) {
+  var regex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+  return regex.test(str);
+}
+        function checkMixedCase(str) {
+  var lowerCaseStr = str.toLowerCase();
+  return str !== lowerCaseStr;
+}
+        function checkpass(){
+            let pass=document.getElementById('pass').value;
+            a=0;
+            if(checkMixedCase(pass)){
+                document.getElementById('regist').style.color='lightgreen';
+                a++;
+            }else{
+                document.getElementById('regist').style.color='white';
+            }
+            if(containsSpecialCharacter(pass)){
+                document.getElementById('special').style.color='lightgreen';
+                a++;
+            }else{
+                document.getElementById('special').style.color='white';
+            }
+            if(pass.length > 8){
+                document.getElementById('len').style.color='lightgreen';
+                a++;
+            }else{
+                document.getElementById('len').style.color='white';
+            }
+            if(checkForDigits(pass)){
+                document.getElementById('num').style.color='lightgreen';
+                a++;
+            }else{
+                document.getElementById('num').style.color='white';
+            }
+            if(a==4){
+                document.getElementById('rep').style.display='block';
+            }else{
+                document.getElementById('rep').style.display='none';
+            }
+
+        }
+       document.getElementsByTagName('form')[0].style.display="none";
+        function change(){
+            document.getElementsByTagName('form')[1].style.display='none';
+            document.getElementsByTagName('form')[0].style.display="flex";
+            document.getElementsByTagName('h2')[0].textContent='Аккаунт уже есть?';
+            document.getElementsByTagName('button')[0].innerHTML='Войти';
+            document.getElementsByTagName('button')[0].setAttribute('onclick','setlogin()');
+        }
+        function setlogin(){
+            //alert('hello');
+            document.getElementsByTagName('form')[1].style.display='flex';
+            document.getElementsByTagName('form')[0].style.display="none";
+            document.getElementsByTagName('h2')[0].textContent='Нет аккаунта? Создайте его';
+            document.getElementsByTagName('button')[0].innerHTML='Создать Аккаунт';
+            document.getElementsByTagName('button')[0].setAttribute('onclick','change()');
+        }
+function normalPool(o){var r=0;do{var a=Math.round(normal({mean:o.mean,dev:o.dev}));if(a<o.pool.length&&a>=0)return o.pool[a];r++}while(r<100)}function randomNormal(o){if(o=Object.assign({mean:0,dev:1,pool:[]},o),Array.isArray(o.pool)&&o.pool.length>0)return normalPool(o);var r,a,n,e,l=o.mean,t=o.dev;do{r=(a=2*Math.random()-1)*a+(n=2*Math.random()-1)*n}while(r>=1);return e=a*Math.sqrt(-2*Math.log(r)/r),t*e+l}
+
+const NUM_PARTICLES = 800;
+const PARTICLE_SIZE = 0.5; // View heights
+const SPEED = 20000; // Milliseconds
+
+let particles = [];
+
+function rand(low, high) {
+  return Math.random() * (high - low) + low;
+}
+
+function createParticle(canvas) {
+  const colour = {
+    r: 255,
+    g: randomNormal({ mean: 125, dev: 20 }),
+    b: 50,
+    a: rand(0, 1),
+  };
+  return {
+    x: -2,
+    y: -2,
+    diameter: Math.max(0, randomNormal({ mean: PARTICLE_SIZE, dev: PARTICLE_SIZE / 2 })),
+    duration: randomNormal({ mean: SPEED, dev: SPEED * 0.1 }),
+    amplitude: randomNormal({ mean: 16, dev: 2 }),
+    offsetY: randomNormal({ mean: 0, dev: 10 }),
+    arc: Math.PI * 2,
+    startTime: performance.now() - rand(0, SPEED),
+    colour: `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${colour.a})`,
+  }
+}
+
+function moveParticle(particle, canvas, time) {
+  const progress = ((time - particle.startTime) % particle.duration) / particle.duration;
+  return {
+    ...particle,
+    x: progress,
+    y: ((Math.sin(progress * particle.arc) * particle.amplitude) + particle.offsetY),
+  };
+}
+
+function drawParticle(particle, canvas, ctx) {
+  canvas = document.getElementById('particle-canvas');
+  const vh = canvas.height / 100;
+
+  ctx.fillStyle = particle.colour;
+  ctx.beginPath();
+  ctx.ellipse(
+    particle.x * canvas.width,
+    particle.y * vh + (canvas.height / 2),
+    particle.diameter * vh,
+    particle.diameter * vh,
+    0,
+    0,
+    2 * Math.PI
+  );
+  ctx.fill();
+}
+
+function draw(time, canvas, ctx) {
+  // Move particles
+  particles.forEach((particle, index) => {
+    particles[index] = moveParticle(particle, canvas, time);
+  })
+
+  // Clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the particles
+  particles.forEach((particle) => {
+    drawParticle(particle, canvas, ctx);
+  })
+
+  // Schedule next frame
+  requestAnimationFrame((time) => draw(time, canvas, ctx));
+}
+
+function initializeCanvas() {
+  let canvas = document.getElementById('particle-canvas');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  let ctx = canvas.getContext("2d");
+
+  window.addEventListener('resize', () => {
+    canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+    canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+    ctx = canvas.getContext("2d");
+  })
+
+  return [canvas, ctx];
+}
+
+function startAnimation() {
+  const [canvas, ctx] = initializeCanvas();
+
+  // Create a bunch of particles
+  for (let i = 0; i < NUM_PARTICLES; i++) {
+    particles.push(createParticle(canvas));
+  }
+  
+  requestAnimationFrame((time) => draw(time, canvas, ctx));
+};
+
+// Start animation when document is loaded
+(function () {
+  if (document.readystate !== 'loading') {
+    startAnimation();
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      startAnimation();
+    })
+  }
+}());
+
+    </script>
+</body>
+</html>
